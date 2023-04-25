@@ -23,7 +23,7 @@ def chaussetous_solver(input_array):
 
     for month in range(num_months):
         # Production constraint
-        model.addConstr(shoes_produced[month] == hours_per_shoe * (160 * workers[month] + overtime[month]))
+        model.addConstr(shoes_produced[month] ==  (160 * workers[month] + overtime[month]) / hours_per_shoe)
         
         # Overtime constraint
         model.addConstr(overtime[month] <= max_overtime * workers[month])
@@ -66,3 +66,4 @@ result = chaussetous_solver(input_array)
 print("Optimal production plan:", result[0])
 print("Optimal worker management:", result[1])
 print("Total cost:", result[2])
+
