@@ -2,7 +2,7 @@ from gurobipy import *
 import numpy as np
 
 def chaussetous_solver(input_array):
-    demand, initial_stock, initial_workers, worker_salary, max_overtime, overtime_pay, hours_per_shoe, material_cost, recruitment_cost, layoff_cost, storage_cost = input_array
+    demand, initial_stock, initial_workers, worker_salary, max_overtime, overtime_pay, hours_per_shoe, material_cost, recruitment_cost, layoff_cost, storage_costs = input_array
 
     num_months = len(demand)
 
@@ -34,7 +34,7 @@ def chaussetous_solver(input_array):
             model.addConstr(workers[month] == workers[month - 1] + recruitment[month] - layoff[month])
 
     # Objective function
-    objective = quicksum(worker_salary * workers[month] + overtime_pay * overtime[month] + material_cost * shoes_produced[month] + recruitment_cost * recruitment[month] + layoff_cost * layoff[month] + storage_cost * stock[month] for month in range(num_months))
+    objective = quicksum(worker_salary * workers[month] + overtime_pay * overtime[month] + material_cost * shoes_produced[month] + recruitment_cost * recruitment[month] + layoff_cost * layoff[month] + storage_costs[month] * stock[month] for month in range(num_months))
     model.setObjective(objective, GRB.MINIMIZE)
 
     # Solve the model
@@ -59,11 +59,10 @@ input_array = (
     15,
     1600,
     2000,
-    3
+    [3, 3, 3, 3]
 )
 
 result = chaussetous_solver(input_array)
 print("Optimal production plan:", result[0])
 print("Optimal worker management:", result[1])
 print("Total cost:", result[2])
-
