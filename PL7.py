@@ -36,7 +36,7 @@ def optimize_assignment(costs):
         return assignment, model.objVal
     else:
         return None, None
-
+"""
 # Test the function with the provided cost data
 costs = [
     [np.nan, 8200, 7800, 5400, np.nan, 3900, np.nan, np.nan],
@@ -54,4 +54,4 @@ if assignment:
         print(f"Assign project {j} to company {i}")
     print("Objective value:", obj_val)
 else:
-    print("No optimal solution found.")
+    print("No optimal solution found.")"""
