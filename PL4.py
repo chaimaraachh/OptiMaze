@@ -46,7 +46,7 @@ def chaussetous_solver(input_array):
     total_cost = model.objVal
 
     return np.array([production_plan, worker_management, total_cost], dtype=object)
-
+"""
 # Example usage:
 input_array = (
     [3000, 5000, 2000, 1000],
@@ -65,4 +65,4 @@ input_array = (
 result = chaussetous_solver(input_array)
 print("Optimal production plan:", result[0])
 print("Optimal worker management:", result[1])
-print("Total cost:", result[2])
+print("Total cost:", result[2])"""
