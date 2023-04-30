@@ -119,10 +119,10 @@ class App(customtkinter.CTk):
         super().__init__()
         self.my_frame = None
 
-        self.title = customtkinter.CTkLabel(master=self, text="Optimal Resource Allocation", font=('Arial', 30), justify="left")
+        self.title = customtkinter.CTkLabel(master=self, text="Factory, Warehouse Location and Logistics Planning", font=('Arial', 25), justify="left")
         self.title.place(x=20, y=20)
 
-        self.descp = customtkinter.CTkLabel(master=self, text="A client has issued a call for proposals for a certain number of projects. Multiple companies have submitted bids according to a given table. The goal is to determine the optimal allocation that allows completing all projects at a minimum cost, while considering that:Any company without a bid for a project cannot be selected for that projectExactly one company is selected for each project.A company cannot undertake more than a specified number of projects.",
+        self.descp = customtkinter.CTkLabel(master=self, text="A canned goods producer aims to optimize their supply chain by determining ideal factory and warehouse locations. To make the best decision, they should develop a system that considers production capacities, transportation costs, customer requirements, and fixed annual costs, ultimately improving efficiency and reducing overall expenses.",
                                             font=('Arial', 14), wraplength=650, justify="left")
         self.descp.place(x=20, y=70)
 
