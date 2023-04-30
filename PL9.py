@@ -56,7 +56,7 @@ def optimize_transportation(offres, couts_production_transport, couts_transport_
 
 
 
-
+"""
 # Data
 offres = [300, 200, 300, 200, 400]
 couts_production_transport = [
@@ -78,4 +78,4 @@ couts_fixes = [35000, 45000, 40000, 42000, 40000, 40000, 20000, 60000]
 
 # Example test
 result_text = optimize_transportation(offres, couts_production_transport, couts_transport_clients, quantite_requise, couts_fixes)
-print(result_text)
+print(result_text)"""
