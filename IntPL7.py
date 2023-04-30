@@ -46,14 +46,6 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.my_frame = None
-        self.result_label = customtkinter.CTkLabel(master=self, text="", font=('Arial', 16), justify="left")
-        self.result_label.place(x=20, y=0)
-
-        self.result_label1 = customtkinter.CTkLabel(master=self, text="", font=('Arial', 16), justify="left")
-        self.result_label1.place(x=20, y=0)
-
-        self.result_label2 = customtkinter.CTkLabel(master=self, text="", font=('Arial', 16), justify="left")
-        self.result_label2.place(x=20, y=0)
 
         self.title = customtkinter.CTkLabel(master=self, text="Optimal Resource Allocation", font=('Arial', 30), justify="left")
         self.title.place(x=20, y=20)
@@ -79,7 +71,6 @@ class App(customtkinter.CTk):
 
         self.continue_button = customtkinter.CTkButton(master=self, text="continue", command=lambda: self.create_entries(), width=65)
         self.continue_button.place(x=240, y=210)
-        
 
     def button_event(self, my_frame):
         costs = my_frame.get_costs_array()
@@ -94,8 +85,13 @@ class App(customtkinter.CTk):
         else:
             result_text = "No optimal solution found."
 
-        self.result_label.configure(text=result_text)
-        self.result_label.place(x=20, y=my_frame.winfo_y() + self.my_frame.winfo_height() + 35)
+        # Create the scrollable frame when the optimize button is clicked
+        self.scrollable_frame = customtkinter.CTkScrollableFrame(self, width=600, height=100)
+        self.scrollable_frame.place(x=20, y=my_frame.winfo_y() + self.my_frame.winfo_height() + 50)
+
+        self.result_label = customtkinter.CTkLabel(master=self.scrollable_frame, text=result_text, font=('Arial', 16), justify="left")
+        self.result_label.pack(padx=10, pady=10)
+
 
 
         
@@ -122,5 +118,5 @@ class App(customtkinter.CTk):
 
 
 app = App()
-app.geometry("700x900")
+app.geometry("700x700")
 app.mainloop()
