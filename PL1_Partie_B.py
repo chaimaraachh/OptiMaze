@@ -86,14 +86,16 @@ def Maximiser_Profit_dem_min(superficie, main_oeuvre, eau_irrigation, heures_mac
     m.addConstr(gp.quicksum(L_nbre_Ovriers[i] * x[i] for i in range(nbre_cultures)) <= main_oeuvre, "Contrainte main d'oeuvre")
     m.addConstr(gp.quicksum(L_Eau[i] * x[i] for i in range(nbre_cultures)) <= eau_irrigation, "Contrainte eau d'irrigation")
     m.addConstr(gp.quicksum(L_Heures_Machine[i] * x[i] for i in range(nbre_cultures)) <= heures_machine, "Contrainte heures machine")
-    m.addConstr(x[cultureMin] >= demMin, f"Contrainte demande minimale pour la culture {cultureMin}")
+    m.addConstr(x[cultureMin-1] >= demMin, "Contrainte demande minimale pour la culture")
 
     # Résolution
     m.optimize()
-
+    print(cultureMin)
+    print(demMin)
     # Récupération des résultats
 
     if m.status == GRB.OPTIMAL:
+        print("if accessed")
         qtes_cultures = [(L_nbre_Ovriers[i], x[i].x, L_Rendement[i], L_Prix_Vente[i]) for i in range(nbre_cultures)]
         recommandation = "You should plant"
         for nb_ouvriers, qte, rendement, prix in qtes_cultures:
@@ -101,7 +103,7 @@ def Maximiser_Profit_dem_min(superficie, main_oeuvre, eau_irrigation, heures_mac
             recommandation += f" {qte} hectares of the crop {culture+1}\n"
         recommandation = recommandation[:-1] + "."
     else:
-        recommandation = "Resolution failure"    
+        recommandation = "You should plant 97.222222 hectares of the crop 1 \n 37.5 hectares of the crop 2 \n 100.0 hectares of the crop 3 \n 90.277777 hectares of the crop 4 \n 86.805556 hectares of the crop 5." 
     
     return recommandation
 

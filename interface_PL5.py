@@ -234,7 +234,7 @@ class App(ctk.CTk):
                 button.place(relx=0.71,rely=0.64,anchor="center")
                 
 
-            button = ctk.CTkButton(self, fg_color="#FFCB42", text=f"Find the best policy to meet the demands of {nbreVilles} city/cities.", command=lambda : getValues(DemandesVilles,OffresCentrales,CoutsVillesCentrales,res),text_color="#000000")
+            button = ctk.CTkButton(self, fg_color="#FFCB42",text_color="#000000", text=f"Find the best policy to meet the demands of {nbreVilles} city/cities.", command=lambda : getValues(DemandesVilles,OffresCentrales,CoutsVillesCentrales,res))
             button.place(relx=0.3,rely=0.64,anchor="center")
 
             button2 = ctk.CTkButton(self, text=f"Find the best policy in case of penalty", command=lambda : Pénaltie(res),fg_color="#FFCB42",text_color="#000000")

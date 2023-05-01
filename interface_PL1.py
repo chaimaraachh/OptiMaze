@@ -8,7 +8,7 @@ import PL1_Partie_B
 
 ctk.set_appearance_mode("light")
 
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("custom.json")
 
 superficie = 0
 MainOeuvre=0
@@ -157,7 +157,7 @@ class OutputFrame(ctk.CTkScrollableFrame):
                 recommandation = PL1_Partie_B.Embauche(superficie, main_oeuvre,eau_irrigation, heures_machine, nbre_cultures, tuple(L_Rendement), tuple(L_Prix_Vente), tuple(L_nbre_Ovriers), tuple(L_Heures_Machine), tuple(L_Eau), tuple(L_Salaire_ouvrier), tuple(L_gestion), prix_eau, prix_machine)
                 setLabel(label,recommandation)
 
-        self.Button1=OutputRow(self,f"To determine the profit per hectare for the crops", lambda: benefice(Rendement,PrixVente,NbreOuvriers,TempsMachine,Eau,SalaireAnnuel,FG, prixEau, prixMachine, self.label, cultures))
+        self.Button1=OutputRow(self,f"Determine the profit per hectare for the crops", lambda: benefice(Rendement,PrixVente,NbreOuvriers,TempsMachine,Eau,SalaireAnnuel,FG, prixEau, prixMachine, self.label, cultures))
         
         self.Button2=OutputRow(self,"Resolve to maximize the profit",lambda: résolution(superficie,MainOeuvre,eau,heuresMachine, cultures, Rendement, PrixVente, NbreOuvriers, TempsMachine, Eau, SalaireAnnuel, FG, prixEau, prixMachine ,self.label) )
 
