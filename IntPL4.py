@@ -1,7 +1,7 @@
 import customtkinter
 from PL4 import chaussetous_solver
 
-customtkinter.set_appearance_mode("System")  # Modes: system (default), light, dark
+customtkinter.set_appearance_mode("light")  # Modes: system (default), light, dark
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 class MyFrame(customtkinter.CTkFrame):
@@ -114,7 +114,7 @@ class App(customtkinter.CTk):
         self.num_months_entry = customtkinter.CTkEntry(master=self, width=40)
         self.num_months_entry.place(x=160, y=210)
 
-        self.continue_button = customtkinter.CTkButton(master=self, text="continue", command=self.create_entries, width=65)
+        self.continue_button = customtkinter.CTkButton(master=self, text="continue", command=self.create_entries, width=65,fg_color="#FFCB42")
         self.continue_button.place(x=230, y=210)
         
     def button_event(self, my_frame):
@@ -139,7 +139,7 @@ class App(customtkinter.CTk):
         self.my_frame.update_idletasks()
         my_frame_y = self.my_frame.winfo_y()
 
-        self.opt_button = customtkinter.CTkButton(master=self, text="optimize", command=lambda: self.button_event(self.my_frame), width=65)
+        self.opt_button = customtkinter.CTkButton(master=self, text="optimize", command=lambda: self.button_event(self.my_frame), width=65,fg_color="#FFCB42")
         self.opt_button.place(x=230, y=my_frame_y + self.my_frame.winfo_height() + 15)
         
         self.result_label.place(x=20, y=my_frame_y + self.my_frame.winfo_height() + 50)
