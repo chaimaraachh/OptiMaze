@@ -25,12 +25,11 @@ def Politique(offres = [35, 50, 40], demandes = [45, 20, 30, 30], couts = [[8, 6
 
     # Print the solution
     if m.status == GRB.OPTIMAL:
-       print(f"Coût total de transport : {m.objVal}")
+       print(f"Total transport cost: {m.objVal}")
        for i in range(len(offres)):
            for j in range(len(demandes)):
                if x[i, j].x > 0:
-                res = res + f"Quantité transportée de la centrale {i+1} à la ville {j+1} : {x[i,j].x} \n"
-                #print(f"Quantité transportée de la centrale {i+1} à la ville {j+1} : {x[i,j].x}")
+                res = res + f"Amount transported from power plant {i+1} to city {j+1}: {x[i,j].x} \n"
     else:
         return "No optimal solution found."
     return res
@@ -72,5 +71,3 @@ def Politique_avec_penaltie(penalty=[20, 25, 22, 35], offres = [35, 50, 40], dem
         return result
     else:
         return "No solution found."
-s = Politique_avec_penaltie()
-print(s)
