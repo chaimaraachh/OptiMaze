@@ -2,7 +2,7 @@ import customtkinter
 import numpy as np
 from PL9 import optimize_transportation
 
-customtkinter.set_appearance_mode("System")  # Modes: system (default), light, dark
+customtkinter.set_appearance_mode("light")  # Modes: system (default), light, dark
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
@@ -147,8 +147,8 @@ class App(customtkinter.CTk):
         self.num_clients = customtkinter.CTkEntry(master=self, width=40)
         self.num_clients.place(x=180, y=270)
 
-        self.continue_button = customtkinter.CTkButton(master=self, text="continue", command=lambda: self.create_entries(), width=65)
-        self.continue_button.place(x=230, y=250)
+        self.continue_button = customtkinter.CTkButton(master=self, text="continue", command=lambda: self.create_entries(), width=65,fg_color="#FFCB42")
+        self.continue_button.place(x=250, y=230)
 
 
     def button_event(self, my_frame):
@@ -220,7 +220,7 @@ class App(customtkinter.CTk):
         self.scrollable_frame.update_idletasks()
         my_frame_y = self.scrollable_frame.winfo_y()
 
-        self.opt_button = customtkinter.CTkButton(master=self, text="optimize", command=lambda: self.button_event(self.my_frame), width=65)
+        self.opt_button = customtkinter.CTkButton(master=self, text="optimize", command=lambda: self.button_event(self.my_frame), width=65,fg_color="#FFCB42")
         self.opt_button.place(x=250, y=480 + 70)
 
 
