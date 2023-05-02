@@ -1,329 +1,253 @@
-import subprocess
 import tkinter
+import networkx as nx
+import pandas as pd
 import matplotlib
-import numpy as np
-
-
-from PL2  import pertrolium_solver
-from PL4 import chaussetous_solver
-from PL7 import optimize_assignment
-from PL9 import optimize_transportation
-
-
 
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.figure as fig
+import matplotlib.pyplot as plt
 import customtkinter
 import os
 from PIL import Image
-#from optimazeTools.PL3 import optimize_staffing
+
+from optimazeTools.PL3 import optimize_staffing
+from optimazeTools.PL6 import optimize_distribution
+from optimazeTools.PL6_graph import plot_logistic_graph
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("custom")  # Themes: "blue" (standard), "green", "dark-blue"
-class MyFramePL2(customtkinter.CTkFrame):
-     def __init__(self, master, n, **kwargs):
-        super().__init__(master, **kwargs)
-        
-        self.quantities=[]
-        self.qualities=[]
-        self.prices = []
-        self.marketing_costs = []
-        
-        for i in range(n):
-                entry_label = customtkinter.CTkLabel(self, text=f"Quantity - type {i+1}: ")
-                entry_label.grid(row=i, column=0, padx=2, pady=2)
-                
-
-                entry1 = customtkinter.CTkEntry(self,width=40)
-                entry1.grid(row=i, column=1, padx=2, pady=2)
-                
-                
-                entry_label = customtkinter.CTkLabel(self, text=f"Quality level - type {i+1}: ")
-                entry_label.grid(row=i, column=2, padx=2, pady=2)
-
-                entry2 = customtkinter.CTkEntry(self,width=40)
-                entry2.grid(row=i, column=3, padx=2, pady=2)     
-                
-                
-                entry_label = customtkinter.CTkLabel(self, text=f"Baril price {i+1}: ")
-                entry_label.grid(row=i, column=4, padx=2, pady=2)
-
-                entry3 = customtkinter.CTkEntry(self,width=40)
-                entry3.grid(row=i, column=5, padx=2, pady=2)
-                
-
-                entry_label = customtkinter.CTkLabel(self, text=f"Marketing costs - type {i+1}: ")
-                entry_label.grid(row=i, column=6, padx=2, pady=2)
-
-                entry4 = customtkinter.CTkEntry(self,width=40)
-                entry4.grid(row=i, column=7, padx=2, pady=2)
-                
-                
-
-                self.quantities.append(entry1)
-                self.qualities.append(entry2)
-                self.prices.append(entry3)
-                self.marketing_costs.append(entry4)
-
-        entry_label = customtkinter.CTkLabel(self, text="Minimal requiered quality:")
-        entry_label.grid(row=i+1, column=3, padx=5, pady=5)
-        self.Qmin = customtkinter.CTkEntry(self)
-        self.Qmin.grid(row=i+1, column=4, padx=5, pady=5)
-     def get_inputs(self):
-         quantities = [int(x.get()) for x in self.quantities]
-         qualities = [int(x.get()) for x in self.qualities]
-         prices = [float(x.get()) for x in self.prices]
-         marketing_costs = [float(x.get()) for x in self.marketing_costs]
-         Qmin = int(self.Qmin.get())
-         return quantities, qualities, prices, marketing_costs, Qmin
-
-
-
-class MyFramePL4(customtkinter.CTkFrame):
-    def __init__(self, master, num_months, **kwargs):
-        super().__init__(master, **kwargs)
-
-        self.stock = []
-        self.demand = []
-
-        for i in range(num_months):
-            entry_label = customtkinter.CTkLabel(self, text=f"storage costs {i+1}:", fg_color= "transparent",bg_color="transparent")
-            entry_label.grid(row=i, column=0, padx=5, pady=5)
-
-            entry = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-            entry.grid(row=i, column=1, padx=5, pady=5)
-            
-            entry_label = customtkinter.CTkLabel(self, text=f"demand {i+1}:",fg_color= "transparent",bg_color="transparent")
-            entry_label.grid(row=i, column=2, padx=5, pady=5)
-
-            entry2 = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-            entry2.grid(row=i, column=3, padx=5, pady=5)
-
-            self.stock.append(entry)
-            self.demand.append(entry2)
-        entry_label = customtkinter.CTkLabel(self, text="initial stock:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+1, column=0, padx=5, pady=5)
-        self.initial_stock = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.initial_stock.grid(row=i+1, column=1, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="initial workers:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+1, column=2, padx=5, pady=5)
-        self.initial_workers = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.initial_workers.grid(row=i+1, column=3, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="worker salary:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+2, column=0, padx=5, pady=5)
-        self.worker_salary = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.worker_salary.grid(row=i+2, column=1, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="max overtime:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+2, column=2, padx=5, pady=5)
-        self.max_overtime = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.max_overtime.grid(row=i+2, column=3, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="overtime pay:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+3, column=0, padx=5, pady=5)
-        self.overtime_pay = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.overtime_pay.grid(row=i+3, column=1, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="hours per shoe:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+3, column=2, padx=5, pady=5)
-        self.hours_per_shoe = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.hours_per_shoe.grid(row=i+3, column=3, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="material cost:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+4, column=0, padx=5, pady=5)
-        self.material_cost = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.material_cost.grid(row=i+4, column=1, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="recruitment cost:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+4, column=2, padx=5, pady=5)
-        self.recruitment_cost = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.recruitment_cost.grid(row=i+4, column=3, padx=5, pady=5)
-
-        entry_label = customtkinter.CTkLabel(self, text="layoff cost:",fg_color= "transparent",bg_color="transparent")
-        entry_label.grid(row=i+5, column=0, padx=5, pady=5)
-        self.layoff_cost = customtkinter.CTkEntry(self,fg_color= "transparent",bg_color="transparent")
-        self.layoff_cost.grid(row=i+5, column=1, padx=5, pady=5)
-
-    def get_input_array(self):
-        demand = [int(x.get()) for x in self.demand]
-        initial_stock = int(self.initial_stock.get())
-        initial_workers = int(self.initial_workers.get())
-        worker_salary = int(self.worker_salary.get())
-        max_overtime = int(self.max_overtime.get())
-        overtime_pay = int(self.overtime_pay.get())
-        hours_per_shoe = int(self.hours_per_shoe.get())
-        material_cost = int(self.material_cost.get())
-        recruitment_cost = int(self.recruitment_cost.get())
-        layoff_cost = int(self.layoff_cost.get())
-        storage_costs = [int(x.get()) for x in self.stock]
-
-        return demand, initial_stock, initial_workers, worker_salary, max_overtime, overtime_pay, hours_per_shoe, material_cost, recruitment_cost, layoff_cost, storage_costs
-
-class MyFramePL7(customtkinter.CTkFrame):
-    def __init__(self, master, num_companies, num_projects, **kwargs):
-        super().__init__(master, **kwargs)
-        self.entries = []
-
-        # Add column headers
-        for j in range(num_projects):
-            header = customtkinter.CTkLabel(self, text=f"Proj{j+1}")
-            header.grid(row=0, column=j+1, padx=5, pady=5)
-
-        # Add row headers
-        for i in range(num_companies):
-            header = customtkinter.CTkLabel(self, text=f"Company {i+1}")
-            header.grid(row=i+1, column=0, padx=5, pady=5)
-
-        # Create table entries
-        for i in range(num_companies):
-            row_entries = []
-            for j in range(num_projects):
-                entry = customtkinter.CTkEntry(self, width=50)
-                entry.grid(row=i+1, column=j+1, padx=5, pady=5)
-                row_entries.append(entry)
-            self.entries.append(row_entries)
-    def get_costs_array(self):
-        costs = []
-        for i in range(len(self.entries)):
-            row_costs = []
-            for j in range(len(self.entries[i])):
-                try:
-                    value = int(self.entries[i][j].get())
-                except ValueError:
-                    value = np.nan
-                row_costs.append(value)
-            costs.append(row_costs)
-        return np.array(costs)
-
-class MyFramePL9(customtkinter.CTkFrame):
-    def __init__(self, master, num_factories, num_depots, num_clients, **kwargs):
-        super().__init__(master, **kwargs)
-        
-        self.offers = []
-        self.entries = []
-        self.row_entries =[]
-
-        # Add row header
-        header = customtkinter.CTkLabel(self, text="Offers")
-        header.grid(row=1, column=0, padx=5, pady=5)
-
-        # Add column headers
-        for j in range(num_factories):
-            header = customtkinter.CTkLabel(self, text=f"Factory {j + 1}")
-            header.grid(row=0, column=j + 1, padx=5, pady=5)
-
-        entries = []
-
-        # Create table entries
-        for j in range(num_factories):
-            entry = customtkinter.CTkEntry(self, width=50)
-            entry.grid(row=1, column=j + 1, padx=5, pady=5)
-            entries.append(entry)
-        self.entries.append(entries)
-        
-        # Add row header
-        header = customtkinter.CTkLabel(self, text="from/to")
-        header.grid(row=2, column=0, padx=5, pady=5)
-
-        # Add column headers
-        for j in range(num_depots):
-            header = customtkinter.CTkLabel(self, text=f"Depot {j + 1}")
-            header.grid(row=2, column=j + 1, padx=5, pady=5)
-
-        # Add row headers and create table entries
-        for i in range(num_factories):
-            header = customtkinter.CTkLabel(self, text=f"Factory {i + 1}")
-            header.grid(row=i + 3, column=0, padx=5, pady=5)
-
-            entries = []
-            for j in range(num_depots):
-                entry = customtkinter.CTkEntry(self, width=50)
-                entry.grid(row=i + 3, column=j + 1, padx=5, pady=5)
-                entries.append(entry)
-            self.entries.append(entries)
-
-        # Add row header
-        header = customtkinter.CTkLabel(self, text="from/to")
-        header.grid(row=num_factories + 3, column=0, padx=5, pady=5)
-
-        # Add column headers
-        for j in range(num_clients):
-            header = customtkinter.CTkLabel(self, text=f"Client {j + 1}")
-            header.grid(row=num_factories + 3, column=j + 1, padx=5, pady=5)
-
-        # Add row headers and create table entries
-        for i in range(num_depots):
-            header = customtkinter.CTkLabel(self, text=f"Depot {i + 1}")
-            header.grid(row=i + num_factories+ 4, column=0, padx=5, pady=5)
-
-            row_entries = []
-            for j in range(num_clients):
-                entry = customtkinter.CTkEntry(self, width=50)
-                entry.grid(row=i + num_factories + 4, column=j + 1, padx=5, pady=5)
-                row_entries.append(entry)
-            self.entries.append(row_entries)
-        # Add row header
-        header = customtkinter.CTkLabel(self, text="Quantity required")
-        header.grid(row=num_depots + num_factories + 5, column=0, padx=5, pady=5)
-
-        # Add column headers
-        for j in range(num_clients):
-            header = customtkinter.CTkLabel(self, text=f"Client {j + 1}")
-            header.grid(row=num_depots + num_factories + 4, column=j + 1, padx=5, pady=5)
-
-        # Create table entries
-        row_entries = []
-        for j in range(num_clients):
-            entry = customtkinter.CTkEntry(self, width=50)
-            entry.grid(row=num_depots + num_factories + 5, column=j + 1, padx=5, pady=5)
-            row_entries.append(entry)
-        self.entries.append(row_entries)
-
-        # Add row header
-        header = customtkinter.CTkLabel(self, text="Fixed cost")
-        header.grid(row=num_depots + num_factories + 7, column=0, padx=5, pady=5)
-
-        # Add column headers for factories
-        for j in range(num_factories):
-            header = customtkinter.CTkLabel(self, text=f"Factory {j + 1}")
-            header.grid(row=6+num_depots + num_factories, column=j + 1, padx=5, pady=5)
-
-        # Add column headers for depots
-        for j in range(num_depots):
-            header = customtkinter.CTkLabel(self, text=f"Depot {j + 1}")
-            header.grid(row=6+num_depots + num_factories, column=num_factories + j + 1, padx=5, pady=5)
-
-        # Create table entries
-        row_entries = []
-        for j in range(num_factories + num_depots):
-            entry = customtkinter.CTkEntry(self, width=50)
-            entry.grid(row=num_depots + num_factories+7, column=j + 1, padx=5, pady=5)
-            row_entries.append(entry)
-        self.entries.append(row_entries)
-
-
+quantity_matrix = None
+"""
 class ToplevelWindow(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.geometry("700x600")
+        global quantity_matrix
+        G = create_logistic_graph(quantity_matrix)
 
-        figure = fig.Figure()
-        ax1 = figure.add_subplot(111)
-        canvas = FigureCanvasTkAgg(figure, master=self)
-        canvas.get_tk_widget().grid()
-        canvas.draw()
+        figure = plt.Figure()
+        ax = figure.add_subplot(111)
+        #canvas = FigureCanvasTkAgg(figure, master=self)
+        #canvas.get_tk_widget().grid()
+        pos = nx.circular_layout(G)
+        # edge_labels = {(i, j): f'{G.edges[i, j]["weight"]}' for i, j in G.edges}
+        # Only include non-null edges in the graph
+        non_null_edges = [(i, j) for i, j in G.edges if not pd.isnull(G.edges[i, j]['weight'])]
+
+        # Create a dictionary of edge labels for only the non-null edges
+        edge_labels = {(i, j): f'{G.edges[i, j]["weight"]}' for i, j in non_null_edges}
+
+        nx.draw(G, pos, with_labels=True, node_size=3000, node_color='lightblue', font_size=12, ax=ax)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=12, ax=ax)
+        #canvas.draw()
+        figure.show()
+"""
+
+class ScrollableFrame(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, nbr_clt, nbr_fact, **kwargs):
+        super().__init__(master, corner_radius=20, fg_color="#FFFFFF",
+                         border_color="#EDEFF8", border_width=4, width=600, height=400, **kwargs)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        # add widgets onto the frame...
+        self.nbr_clients = nbr_clt
+        self.nbr_factories = nbr_fact
+        self.client_demands = []
+        self.factories_capacity = []
+        label_client = customtkinter.CTkLabel(self, text=" Clients Demands :", fg_color="#FFCF55",
+                                              corner_radius=30)
+        label_client.grid(row=0, columnspan=4, padx=10, pady=10)
+        for i in range(self.nbr_clients):
+            label1 = customtkinter.CTkLabel(master=self, text=f"Client {i} :")
+            label1.grid(row=len(self.client_demands) + 1, column=0, padx=10, pady=10)
+            entry1 = customtkinter.CTkEntry(master=self)
+            entry1.grid(row=len(self.client_demands) + 1, column=1, padx=10, pady=10)
+            self.client_demands.append(entry1)
+
+        label_factories = customtkinter.CTkLabel(self, text="Factories Capacity :", fg_color="#FFCF55",
+                                                 corner_radius=30)
+        label_factories.grid(row=len(self.client_demands) + 1, columnspan=4, padx=10, pady=10)
+
+        for i in range(self.nbr_factories):
+            label1 = customtkinter.CTkLabel(master=self, text=f"Factory {i} :")
+            label1.grid(row=len(self.factories_capacity) + 2 + len(self.client_demands), column=0, padx=10, pady=10)
+            entry2 = customtkinter.CTkEntry(master=self)
+            entry2.grid(row=len(self.factories_capacity) + 2 + len(self.client_demands), column=1, padx=10, pady=10)
+            self.factories_capacity.append(entry2)
+
+    def get_items(self):
+        return [int(client.get()) for client in self.client_demands], [int(factory.get()) for factory in
+                                                                       self.factories_capacity]
 
 
-def command(check_var, entry):
-    if check_var == 1:
-        entry.configure(state="normal")
-        print("normal")
-    else:
-        entry.configure(state="disabled")
-        print("disabled")
+class ScrollableFrame_2(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, nbr_clt, nbr_fact, nbr_depot, **kwargs):
+        super().__init__(master, corner_radius=20, fg_color="#FFFFFF",
+                         border_color="#EDEFF8", border_width=4, width=600, height=400, **kwargs)
+        self.grid_rowconfigure((1, 2), weight=1)
+        self.grid_columnconfigure((1, 2), weight=1)
+        # add widgets onto the frame...
+        self.nbr_clients = nbr_clt
+        self.nbr_factories = nbr_fact
+        self.nbr_depot = nbr_depot
+        self.client_cost = []
+        self.factories_cost = []
+        self.depot_cost = []
+        client_list = []
+        factory_list = []
+        depot_list = []
+        for i in range(self.nbr_clients):
+            client_list.append(f"Client {i}")
+        for i in range(self.nbr_factories):
+            factory_list.append(f"Factory {i}")
+        for i in range(self.nbr_depot):
+            depot_list.append(f"Depot {i}")
+
+        factory_headers = factory_list + depot_list + client_list
+        depot_headers = depot_list + client_list
+
+        label_client = customtkinter.CTkLabel(self, text="Transhipment Costs :", fg_color="#FFCF55",
+                                              corner_radius=30)
+        label_client.grid(row=0, columnspan=4, padx=10, pady=10)
+        for i in range(self.nbr_clients):
+            label_client = customtkinter.CTkLabel(self, text=f" Client {i} :", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.client_cost) + 1, column=0, padx=10, pady=10)
+            for j, key in enumerate(client_list):
+                if i == j:
+                    continue
+                else:
+                    label1 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label1.grid(row=len(self.client_cost) + 1, column=1, padx=10, pady=10)
+                    entry1 = customtkinter.CTkEntry(master=self)
+                    entry1.grid(row=len(self.client_cost) + 1, column=2, padx=10, pady=10)
+                    self.client_cost.append(entry1)
+
+        for i in range(self.nbr_factories):
+            label_client = customtkinter.CTkLabel(self, text=f" Factory {i}:", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.factories_cost) + 2 + len(self.client_cost), column=0, padx=10, pady=10)
+            for j, key in enumerate(factory_headers):
+                if i == j:
+                    continue
+                else:
+                    label2 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label2.grid(row=len(self.factories_cost) + 2 + len(self.client_cost), column=1, padx=10, pady=10)
+                    entry2 = customtkinter.CTkEntry(master=self)
+                    entry2.grid(row=len(self.factories_cost) + 2 + len(self.client_cost), column=2, padx=10, pady=10)
+                    self.factories_cost.append(entry2)
+
+        for i in range(self.nbr_depot):
+            label_client = customtkinter.CTkLabel(self, text=f" depot {i}:", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.depot_cost) + 2 + len(self.client_cost) + len(self.factories_cost), column=0,
+                              padx=10, pady=10)
+            for j, key in enumerate(depot_headers):
+                if i == j:
+                    continue
+                else:
+                    label3 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label3.grid(row=len(self.depot_cost) + 2 + len(self.client_cost) + len(self.factories_cost),
+                                column=1, padx=10, pady=10)
+                    entry3 = customtkinter.CTkEntry(master=self)
+                    entry3.grid(row=len(self.depot_cost) + 2 + len(self.client_cost) + len(self.factories_cost),
+                                column=2, padx=10, pady=10)
+                    self.factories_cost.append(entry3)
+
+    def get_items(self):
+        return [int(factory.get()) for factory in self.factories_cost] + [int(depot.get()) for depot in
+                                                                          self.client_cost] + [int(client.get()) for
+                                                                                               client in
+                                                                                               self.client_cost]
+
+
+class ScrollableFrameResult(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, nbr_clt, nbr_fact, nbr_depot, result, **kwargs):
+        super().__init__(master, corner_radius=20, fg_color="#FFFFFF",
+                         border_color="#EDEFF8", border_width=4, width=600, height=400, **kwargs)
+        self.grid_rowconfigure((1, 2), weight=1)
+        self.grid_columnconfigure((1, 2), weight=1)
+        # add widgets onto the frame...
+        self.nbr_clients = nbr_clt
+        self.nbr_factories = nbr_fact
+        self.nbr_depot = nbr_depot
+        self.client_cost = []
+        self.factories_cost = []
+        self.depot_cost = []
+        self.all_entries = []  # self.factories_cost + self.depot_cost + self.client_cost
+        client_list = []
+        factory_list = []
+        depot_list = []
+        for i in range(self.nbr_clients):
+            client_list.append(f"Client {i}")
+        for i in range(self.nbr_factories):
+            factory_list.append(f"Factory {i}")
+        for i in range(self.nbr_depot):
+            depot_list.append(f"Depot {i}")
+
+        factory_headers = factory_list + depot_list + client_list
+        depot_headers = depot_list + client_list
+        label_client = customtkinter.CTkLabel(self, text="Optimal Transhipment Quantity :", fg_color="#FFCF55",
+                                              corner_radius=30)
+        label_client.grid(row=0, columnspan=4, padx=10, pady=10)
+
+        for i in range(self.nbr_factories):
+            label_client = customtkinter.CTkLabel(self, text=f" Factory {i}:", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.factories_cost) + 1, column=0, padx=10, pady=10)
+            for j, key in enumerate(factory_headers):
+                if i == j:
+                    continue
+                else:
+                    label2 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label2.grid(row=len(self.factories_cost) + 1, column=1, padx=10, pady=10)
+                    entry2 = customtkinter.CTkEntry(master=self)
+                    entry2.grid(row=len(self.factories_cost) + 1, column=2, padx=10, pady=10)
+                    self.factories_cost.append(entry2)
+                    self.all_entries.append(entry2)
+
+        for i in range(self.nbr_depot):
+            label_client = customtkinter.CTkLabel(self, text=f" depot {i}:", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.depot_cost) + 2 + len(self.factories_cost), column=0,
+                              padx=10, pady=10)
+            for j, key in enumerate(depot_headers):
+                if i == j:
+                    continue
+                else:
+                    label3 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label3.grid(row=len(self.depot_cost) + 2 + len(self.factories_cost),
+                                column=1, padx=10, pady=10)
+                    entry3 = customtkinter.CTkEntry(master=self)
+                    entry3.grid(row=len(self.depot_cost) + 2 + len(self.factories_cost),
+                                column=2, padx=10, pady=10)
+                    self.depot_cost.append(entry3)
+                    self.all_entries.append(entry3)
+
+        for i in range(self.nbr_clients):
+            label_client = customtkinter.CTkLabel(self, text=f" Client {i} :", fg_color="#FFCF55",
+                                                  corner_radius=30)
+            label_client.grid(row=len(self.client_cost) + len(self.depot_cost) + 2 + len(self.factories_cost), column=0,
+                              padx=10, pady=10)
+            for j, key in enumerate(client_list):
+                if i == j:
+                    continue
+                else:
+                    label1 = customtkinter.CTkLabel(master=self, text=f"{key} :")
+                    label1.grid(row=len(self.client_cost) + len(self.depot_cost) + 2 + len(self.factories_cost),
+                                column=1, padx=10, pady=10)
+                    entry1 = customtkinter.CTkEntry(master=self)
+                    entry1.grid(row=len(self.client_cost) + len(self.depot_cost) + 2 + len(self.factories_cost),
+                                column=2, padx=10, pady=10)
+
+                    self.client_cost.append(entry1)
+                    self.all_entries.append(entry1)
+
+        for i in range(len(self.all_entries)):
+            print(self.all_entries[i])
+            self.all_entries[i].insert(0, str(result[i]))
+            self.all_entries[i].configure(state="disabled")
 
 
 class CheckBoxFrame(customtkinter.CTkFrame):
@@ -403,11 +327,6 @@ class Cards(customtkinter.CTkFrame):
                                               command=command)
         self.button.grid(row=3, column=1, padx=10)
 
-        # self.bind("<Button-1>", self.on_hover)
-
-    # def on_hover(self):
-    #    self.configure(border_color="#FFB200")
-
 
 class IntroFrame(customtkinter.CTkFrame):
     def __init__(self, master, row, column, title, icon, text, command, **kwargs):
@@ -446,9 +365,23 @@ class IntroFrame(customtkinter.CTkFrame):
         super().grid()
 
 
+def get_values(self):
+    values = []
+    for row in self.table:
+        row_values = []
+        for cell in row:
+            if cell.cget("state") == 'disabled':
+                continue
+            else:
+                row_values.append(cell.get())
+        values.append(row_values)
+    return values
+
+
 class App(customtkinter.CTk):
     WIDTH = 1300
     HEIGHT = 700
+    global quantity_matrix
 
     def __init__(self):
         super().__init__()
@@ -479,10 +412,7 @@ class App(customtkinter.CTk):
         # ======================== TopLevel window ================
 
         self.toplevel_window = None
-        self.my_framePL2 = None
-        self.my_framePL4 = None
-        self.my_framePL7 = None
-        self.my_framePL9 = None
+
         # ============ create main frames ============
 
         # configure grid layout (2x1)
@@ -502,30 +432,13 @@ class App(customtkinter.CTk):
         self.frame_PL_intro.grid(row=0, column=1, sticky="nswe")
         self.frame_PL_intro.grid_remove()
 
-        self.pl2_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
-        self.pl2_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
-        self.pl2_solve_frame.grid_remove()
-
-
         self.pl3_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
         self.pl3_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
         self.pl3_solve_frame.grid_remove()
 
-        self.pl4_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
-        self.pl4_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
-        self.pl4_solve_frame.grid_remove()
-
         self.pl6_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
         self.pl6_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
         self.pl6_solve_frame.grid_remove()
-
-        self.pl7_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
-        self.pl7_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
-        self.pl7_solve_frame.grid_remove()
-
-        self.pl9_solve_frame = customtkinter.CTkFrame(master=self, fg_color="#F9FAFF")
-        self.pl9_solve_frame.grid(row=0, column=1, sticky="nswe", pady=(0, 10))
-        self.pl9_solve_frame.grid_remove()
 
         # ============ frame_left ============
 
@@ -598,31 +511,21 @@ class App(customtkinter.CTk):
 
         self.card1 = Cards(self.frame_cards, 1, 1, None, self.agriculture_img,
                            "\nPL1: Agricultural Zone Management")
-        self.card2 = Cards(self.frame_cards, 1, 3, self.pl2_intro, self.oil_img, "\nPL2: Blending in oil production")
+        self.card2 = Cards(self.frame_cards, 1, 3, None, self.oil_img, "\nPL2: Blending in oil production")
         self.card3 = Cards(self.frame_cards, 1, 5, self.pl3_intro, self.networking_img,
                            "\nPL3: Human resource planning")
-        self.card4 = Cards(self.frame_cards, 3, 1, self.pl4_intro, self.shoes_img, "\nPL4: Production management")
+        self.card4 = Cards(self.frame_cards, 3, 1, None, self.shoes_img, "\nPL4: Production management")
         self.card5 = Cards(self.frame_cards, 3, 3, None, self.eco_house_img, "\nPL5: Electricity production")
         self.card6 = Cards(self.frame_cards, 3, 5, self.pl6_intro, self.distribution_img,
                            "\n PL6: Product distribution")
-        self.card7 = Cards(self.frame_cards, 5, 1, self.pl7_intro, self.company_img, "\nPL7: Optimal allocation of resources")
+        self.card7 = Cards(self.frame_cards, 5, 1, None, self.company_img, "\nPL7: Optimal allocation of resources")
         self.card8 = Cards(self.frame_cards, 5, 3, None, self.road_img, "\nPL8: Equipment replacement")
-        self.card9 = Cards(self.frame_cards, 5, 5, self.pl9_intro, self.pin_img, "\nPL9: Factories and depots location\n& "
+        self.card9 = Cards(self.frame_cards, 5, 5, None, self.pin_img, "\nPL9: Factories and depots location\n& "
                                                                        "logistics planning")
 
         # ============ frame_PL_introduction ============
         self.frame_PL_intro.grid_columnconfigure(0, weight=1)
         self.frame_PL_intro.grid_rowconfigure(0, weight=1)
-
-        self.intro_PL2 = IntroFrame(self.frame_PL_intro, 0, 0, "  PL2: Optimizing Oil Blend Composition", self.oil_img,
-                                    "Welcome to the Oil Blending Tool! This tool was  "
-                                    "designed to assist oil \n companies in optimizing their "
-                                    " oil production by selecting the types of oil to \n  "
-                                    "blend in order to maximize their revenue. With this "
-                                    " interface, \n you can select the number of oil types you want to include in your mix,  "
-                                    "specify the quantity, quality, \n and price of each type. ", self.pl2_start)
-
-
         self.intro_PL3 = IntroFrame(self.frame_PL_intro, 0, 0, "  PL3: Human resource planning", self.networking_img,
                                     "Welcome To Human Resource Planning.\n\n A post office needs staff for a number of "
                                     "days a week based on the minimun daily requirement.\nWe will attempt to "
@@ -643,77 +546,18 @@ class App(customtkinter.CTk):
                                     "as well as determine the optimal transportation and "
                                     "transhipment policy. ", self.pl6_start)
 
-        self.intro_PL4 = IntroFrame(self.frame_PL_intro, 0, 0, "  PL4: Production Management", self.shoes_img,
-                                    "A company must meet varying product demands over  "
-                                    "several months, with an initial stock \n and workforce. "
-                                    " Workers have a fixed salary, work a certain number "
-                                    " of hours, and can work overtime at \n an additional "
-                                    "rate. Producing a product unit requires labor and  "
-                                    "raw materials, and there are  \n costs for recruitment, "
-                                    "layoffs, and storage. The goal is to determine the  "
-                                    "optimal production plan and \n worker management policy "
-                                    "as well as determine the \n optimal transportation and "
-                                    " to minimize costs while meeting monthly demands.", self.pl4_start)
-
-        self.intro_PL7 = IntroFrame(self.frame_PL_intro, 0, 0, "  PL7: Optimal Resource Allocation", self.company_img,
-                                    "A client has issued a call for proposals for a   "
-                                    "certain number of projects.  \n   Multiple companies have"
-                                    " submitted bids according to a given table.\n "
-                                    " The goal is to determine the optimal allocation that allows"
-                                    " completing all projects at \n a minimum cost, while   "
-                                    "considering that: \n  Any company without  a bid for a  "
-                                    "project cannot be selected for that project Exactly  "
-                                    " \n one company is selected for each project.\n A company  "
-                                    "cannot undertake more than a specified number of projects."
-                                   , self.pl7_start)
-
-        self.intro_PL9 = IntroFrame(self.frame_PL_intro, 0, 0, "  PL9: Factory, Warehouse Location and Logistics Planning", self.pin_img,
-                                    "A canned goods producer aims to optimize their "
-                                    "supply chain by determining ideal \n factory and "
-                                    "warehouse locations. To make the best decision, \n they "
-                                    "  should develop a system that considers production"
-                                    " capacities,\n  transportation costs, customer  "
-                                    "requirements, and fixed annual costs, ultimately \n  "
-                                    "improving efficiency and reducing overall expenses.  "
-
-                                   , self.pl9_start)
-
         # ========== functions =============
 
     # =============== PL Introductions =================
-
-    def pl2_intro(self):
-        self.hide_all_frames()
-        self.frame_PL_intro.grid()
-        self.intro_PL2.grid_appear()
-
-
     def pl3_intro(self):
         self.hide_all_frames()
         self.frame_PL_intro.grid()
         self.intro_PL3.grid_appear()
 
-    def pl4_intro(self):
-        self.hide_all_frames()
-        self.frame_PL_intro.grid()
-        self.intro_PL4.grid_appear()
-
-        
     def pl6_intro(self):
         self.hide_all_frames()
         self.frame_PL_intro.grid()
         self.intro_PL6.grid_appear()
-
-        
-    def pl7_intro(self):
-        self.hide_all_frames()
-        self.frame_PL_intro.grid()
-        self.intro_PL7.grid_appear()
-
-    def pl9_intro(self):
-        self.hide_all_frames()
-        self.frame_PL_intro.grid()
-        self.intro_PL9.grid_appear()
 
     # ==============   Pl Solvers ===================
 
@@ -745,7 +589,7 @@ class App(customtkinter.CTk):
                                                  corner_radius=30)
         self.label_type.grid(row=1, column=0, padx=20, pady=10, ipadx=5, ipady=3, stick="nsw")
 
-        radio_var = tkinter.IntVar(self)
+        radio_var = tkinter.IntVar(0)
         self.radio_button1 = customtkinter.CTkRadioButton(self.tabview_parameter.tab("Parameters"), text="INTEGER",
                                                           variable=radio_var, value=1, fg_color="#FFB200")
         self.radio_button1.grid(row=1, column=1, pady=10)
@@ -769,6 +613,14 @@ class App(customtkinter.CTk):
                                                         bg_color="transparent",
                                                         command=lambda: self.pl3_solve(radio_var))
         self.pl3_solve_button.grid(row=3, column=1, padx=10, pady=10)
+        self.pl3_reset_button = customtkinter.CTkButton(master=self.tabview_parameter.tab("Parameters"),
+                                                        corner_radius=30,
+                                                        fg_color="#FFCB42",
+                                                        text="Reset",
+                                                        text_color="black", hover_color="#FFB200",
+                                                        bg_color="transparent",
+                                                        command=self.pl3_start)
+        self.pl3_reset_button.grid(row=3, column=0, padx=10, pady=10)
 
         self.tabview_solver = customtkinter.CTkTabview(master=self.pl3_solve_frame, corner_radius=20,
                                                        fg_color="#FFFFFF",
@@ -798,16 +650,12 @@ class App(customtkinter.CTk):
         result_str = "\n".join(result_list)
         self.result_label2.configure(text=result_str)
 
-
-
-
-
-
     # ================ PL 6 =======================
     def pl6_start(self):
         self.hide_all_frames()
         self.pl6_solve_frame.grid()
-        self.pl6_solve_frame.grid_columnconfigure((0), weight = 1)
+        self.pl6_solve_frame.grid_columnconfigure((0), weight=1)
+        self.pl6_solve_frame.grid_rowconfigure(2, weight=1)
         self.title = customtkinter.CTkLabel(master=self.pl6_solve_frame, corner_radius=20,
                                             fg_color="transparent",
                                             text="  PL6: Product distribution",
@@ -820,186 +668,111 @@ class App(customtkinter.CTk):
         self.frame_generate = customtkinter.CTkFrame(master=self.pl6_solve_frame, corner_radius=20,
                                                      fg_color="#FFFFFF",
                                                      border_color="#EDEFF8", border_width=4)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-        nbr_client_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Clients :")
-        nbr_client_label.grid(row = 0 , column = 0 , padx=10, pady=10)
-        nbr_client_entry = customtkinter.CTkEntry(master=self.frame_generate)
-        nbr_client_entry.grid(row= 0 , column = 1, padx=10, pady =10)
+        self.frame_generate.grid(row=1, columnspan=4, pady=10, padx=20, sticky="nsew")
+        self.frame_generate.grid_columnconfigure((1, 3), weight=1)
 
-        nbr_depot_label = customtkinter.CTkLabel(master=self.frame_generate, text ="Number of depots :")
+        nbr_client_label = customtkinter.CTkLabel(master=self.frame_generate, text="Number Of Clients :")
+        nbr_client_label.grid(row=0, column=0, padx=10, pady=10)
+        nbr_client_entry = customtkinter.CTkEntry(master=self.frame_generate)
+        nbr_client_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        nbr_depot_label = customtkinter.CTkLabel(master=self.frame_generate, text="Number of depots :")
         nbr_depot_label.grid(row=0, column=2, padx=10, pady=10)
         nbr_depot_entry = customtkinter.CTkEntry(master=self.frame_generate)
         nbr_depot_entry.grid(row=0, column=3, padx=10, pady=10)
 
-        nbr_factory_label = customtkinter.CTkLabel(master=self.frame_generate, text ="Number Of Factories :")
+        nbr_factory_label = customtkinter.CTkLabel(master=self.frame_generate, text="Number Of Factories :")
         nbr_factory_label.grid(row=1, column=0, padx=10, pady=10)
         nbr_factory_entry = customtkinter.CTkEntry(master=self.frame_generate)
         nbr_factory_entry.grid(row=1, column=1, padx=5, pady=10)
 
-        max_transport_label = customtkinter.CTkLabel(master=self.frame_generate , text="Max Transphipment Capacity :", justify="center")
+        max_transport_label = customtkinter.CTkLabel(master=self.frame_generate, text="Max Transphipment Capacity :",
+                                                     justify="center")
         max_transport_label.grid(row=1, column=2, padx=5, pady=10)
         max_transport_entry = customtkinter.CTkEntry(master=self.frame_generate)
         max_transport_entry.grid(row=1, column=3, padx=5, pady=10)
 
-        generate_button = customtkinter.CTkButton(master=self.frame_generate, text="Generate",corner_radius=30,
-                                                        fg_color="#FFCB42",
-                                                        text_color="black", hover_color="#FFB200",
-                                                        bg_color="transparent")
-        generate_button.grid(row = 2 , column = 4 , padx =10, pady=10, sticky="nsew")
+        solve_button = customtkinter.CTkButton(master=self.frame_generate, text="Solve", corner_radius=30,
+                                               fg_color="#FFCB42",
+                                               text_color="black", hover_color="#FFB200",
+                                               bg_color="transparent", state="disabled",
+                                               command=None)
+        solve_button.grid(row=2, column=2, padx=10, pady=10, sticky="nsew")
+        generate_button = customtkinter.CTkButton(master=self.frame_generate, text="Generate", corner_radius=30,
+                                                  fg_color="#FFCB42",
+                                                  text_color="black", hover_color="#FFB200",
+                                                  bg_color="transparent",
+                                                  command=lambda: self.generate(nbr_client_entry, nbr_factory_entry,
+                                                                                solve_button, nbr_depot_entry,
+                                                                                max_transport_entry))
 
+        generate_button.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
+    def generate(self, client_entry, factory_entry, button, dpt_entry, transp_entry):
+        table = ScrollableFrame(self.pl6_solve_frame, int(client_entry.get()), int(factory_entry.get()))
+        table.grid(row=2, column=0, padx=10, pady=10)
+        table2 = ScrollableFrame_2(self.pl6_solve_frame, int(client_entry.get()), int(factory_entry.get()),
+                                   int(dpt_entry.get()))
+        table2.grid(row=2, column=1, padx=10, pady=10)
+        button.configure(state="normal",
+                         command=lambda: self.pl6_solve(client_entry, factory_entry, dpt_entry, transp_entry, table,
+                                                        table2))
 
-
-############# PL4 ################
-    def pl2_start(self):
+    def pl6_solve(self, client_entry, factory_entry, dpt_entry, transp_entry, table, table2):
         self.hide_all_frames()
-        self.pl2_solve_frame.grid()
-        self.pl2_solve_frame.grid_columnconfigure((0), weight = 1)
-        self.title = customtkinter.CTkLabel(master=self.pl2_solve_frame, corner_radius=20,
-                                            fg_color="transparent",
-                                            text="  PL2: Optimizing Oil Blend Composition",
-                                            font=customtkinter.CTkFont(size=20, weight="bold"),
-                                            image=self.oil_img,
-                                            compound="left"
-                                            )
-        self.title.grid(row=0, columnspan=4, pady=20, sticky="nsew", padx=20)
+        self.pl6_solve_frame.grid()
+        self.pl6_solve_frame.grid_rowconfigure(2, weight=1)
+        label = customtkinter.CTkLabel(self.pl6_solve_frame, text=" Solver", fg_color="#FFCF55",
+                                       corner_radius=30)
+        label.grid(row=0, columnspan=4, padx=10, pady=10)
+        client_cap, factory_cap = table.get_items()
 
-        self.frame_generate = customtkinter.CTkFrame(master=self.pl2_solve_frame, corner_radius=20,
-                                                     fg_color="#FFFFFF",
-                                                     border_color="#EDEFF8", border_width=4)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-        nbr_types_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number of oil types :")
-        nbr_types_label.grid(row = 0 , column = 0 , padx=10, pady=10)
-        self.nbr_types_entry = customtkinter.CTkEntry(master=self.frame_generate)
-        self.nbr_types_entry.grid(row= 0 , column = 1, padx=10, pady =10)
-        self.continue_button = customtkinter.CTkButton(master=self.frame_generate, text="continue", command=lambda: self.create_entriesPL2(int(self.nbr_types_entry.get())), width=65)
-        self.continue_button.grid(row= 0 , column = 2, padx=10, pady =10)
+        costs = table2.get_items()
+        objval, result, quantity = optimize_distribution(costs, factory_cap, client_cap, int(dpt_entry.get()),
+                                                                int(transp_entry.get()))
+        frame_result = ScrollableFrameResult(self.pl6_solve_frame, len(client_cap), len(factory_cap),
+                                             int(dpt_entry.get()), result)
+        frame_result.grid(row=0, column=0, padx=10, pady=10)
+        reset_button = customtkinter.CTkButton(master=self.pl6_solve_frame, text="Reset", corner_radius=30,
+                                               fg_color="#FFCB42",
+                                               text_color="black", hover_color="#FFB200",
+                                               bg_color="transparent",
+                                               command=self.pl6_start)
+        reset_button.grid(row=1, column=1, padx=10, pady=10)
+        client_list = []
+        factory_list = []
+        depot_list = []
+        headers = []
+        for i in range(len(client_cap)):
+            client_list.append(f"Client {i}")
+        for i in range(len(factory_cap)):
+            factory_list.append(f"Factory {i}")
+        for i in range(int(dpt_entry.get())):
+            depot_list.append(f"Depot {i}")
+        headers = factory_list + depot_list +client_list
+        quantity_matrix =  pd.DataFrame(quantity,
+                                        columns= headers,
+                                        index=headers,
+                                        )
 
-
-    def pl2_solve(self):
-        print("ok")
-
-    def pl4_start(self):
-        self.hide_all_frames()
-        self.pl4_solve_frame.grid()
-        self.pl4_solve_frame.grid_columnconfigure((0), weight = 1)
-        self.title = customtkinter.CTkLabel(master=self.pl4_solve_frame, corner_radius=20,
-                                            fg_color="transparent",
-                                            text="  PL4: Production Management",
-                                            font=customtkinter.CTkFont(size=20, weight="bold"),
-                                            image=self.distribution_img,
-                                            compound="left"
-                                            )
-        self.title.grid(row=0, columnspan=4, pady=20, sticky="nsew", padx=20)
-
-        self.frame_generate = customtkinter.CTkFrame(master=self.pl4_solve_frame, corner_radius=20,
-                                                     fg_color="#FFFFFF",
-                                                     border_color="#EDEFF8", border_width=4)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-        nbr_months_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Months :")
-        nbr_months_label.grid(row = 0 , column = 0 , padx=10, pady=10)
-        self.nbr_months_entry = customtkinter.CTkEntry(master=self.frame_generate)
-        self.nbr_months_entry.grid(row= 0 , column = 1, padx=10, pady =10)
-        self.continue_button = customtkinter.CTkButton(master=self.frame_generate, text="continue", command=lambda: self.create_entries(int(self.nbr_months_entry.get())), width=65)
-        self.continue_button.grid(row= 0 , column = 2, padx=10, pady =10)
-
-
-    def pl4_solve(self):
-        print("ok")
-
-
-########## PL7 ####################
-    def pl7_start(self):
-        self.hide_all_frames()
-        self.pl7_solve_frame.grid()
-        self.pl7_solve_frame.grid_columnconfigure((0), weight = 1)
-        self.title = customtkinter.CTkLabel(master=self.pl7_solve_frame, corner_radius=20,
-                                            fg_color="transparent",
-                                            text="  PL7: Optimal allocation of resources",
-                                            font=customtkinter.CTkFont(size=20, weight="bold"),
-                                            image=self.company_img,
-                                            compound="left"
-                                            )
-        self.title.grid(row=0, columnspan=4, pady=20, sticky="nsew", padx=20)
-
-        self.frame_generate = customtkinter.CTkFrame(master=self.pl7_solve_frame, corner_radius=20,
-                                                     fg_color="#FFFFFF",
-                                                     border_color="#EDEFF8", border_width=4)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-
-        nbr_companies_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Companies :")
-        nbr_companies_label.grid(row = 0 , column = 0 , padx=10, pady=10)
-        self.nbr_companies_entry = customtkinter.CTkEntry(master=self.frame_generate)
-        self.nbr_companies_entry.grid(row= 0 , column = 1, padx=10, pady =10)
-
-        nbr_projects_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Projects :")
-        nbr_projects_label.grid(row = 0 , column = 2 , padx=10, pady=10)
-        self.nbr_projects_entry = customtkinter.CTkEntry(master=self.frame_generate)
-        self.nbr_projects_entry.grid(row= 0 , column = 3, padx=10, pady =10)
-
-        
-        self.continue_button = customtkinter.CTkButton(master=self.frame_generate, text="continue", command=lambda: self.create_entriesPL7(int(self.nbr_companies_entry.get()),int(self.nbr_projects_entry.get())), width=65)
-        self.continue_button.grid(row= 0 , column = 4, padx=10, pady =10)
-
-
-    def pl7_solve(self):
-        print("ok")
-
-    ############## PL9 ##################
-
-
-    def pl9_start(self):
-        self.hide_all_frames()
-        self.pl9_solve_frame.grid()
-        self.pl9_solve_frame.grid_columnconfigure((0), weight = 1)
-        self.title = customtkinter.CTkLabel(master=self.pl9_solve_frame, corner_radius=20,
-                                            fg_color="transparent",
-                                            text="  PL9: Factory, Warehouse Location and Logistics Planning",
-                                            font=customtkinter.CTkFont(size=20, weight="bold"),
-                                            image=self.pin_img,
-                                            compound="left"
-                                            )
-        self.title.grid(row=0, columnspan=4, pady=20, sticky="nsew", padx=20)
-
-        self.frame_generate = customtkinter.CTkFrame(master=self.pl9_solve_frame, corner_radius=20,
-                                                     fg_color="#FFFFFF",
-                                                     border_color="#EDEFF8", border_width=4)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-        self.frame_generate.grid(row=1,columnspan=4, pady=10, padx=20, sticky="nsew")
-        self.frame_generate.grid_columnconfigure((1,3), weight= 1)
-
-        num_factories_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Factories :")
-        num_factories_label.grid(row = 0 , column = 0 , padx=10, pady=10)
-        self.num_factories = customtkinter.CTkEntry(master=self.frame_generate)
-        self.num_factories.grid(row= 0 , column = 1, padx=10, pady =10)
-
-        num_depots_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Depots :")
-        num_depots_label.grid(row = 0 , column = 2 , padx=10, pady=10)
-        self.num_depots = customtkinter.CTkEntry(master=self.frame_generate)
-        self.num_depots.grid(row= 0 , column = 3, padx=10, pady =10)
-
-        num_clients_label = customtkinter.CTkLabel(master=self.frame_generate, text = "Number Of Clients :")
-        num_clients_label.grid(row = 0 , column = 4 , padx=10, pady=10)
-        self.num_clients = customtkinter.CTkEntry(master=self.frame_generate)
-        self.num_clients.grid(row= 0 , column = 5, padx=10, pady =10)
-
-
-        
-        self.continue_button = customtkinter.CTkButton(master=self.frame_generate, text="continue", command=lambda: self.create_entriesPL9(int(self.num_factories.get()),int(self.num_depots.get()),int(self.num_clients.get())), width=65)
-        self.continue_button.grid(row= 1 , column = 2, padx=10, pady =10)
-
-    def pl9_solve(self):
-        print("ok")
+        graph_button = customtkinter.CTkButton(master=self.pl6_solve_frame, text="Generate Logistics Graph",
+                                               corner_radius=30,
+                                               fg_color="#FFCB42",
+                                               text_color="black", hover_color="#FFB200",
+                                               bg_color="transparent",
+                                               command=lambda : self.plot())
+        graph_button.grid(row=1, column=0, padx=10, pady=10)
 
     # ================== Loopback functions ===============
 
+    def plot(self):
+        plot_logistic_graph()
+        """
+        if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
+            self.toplevel_window = ToplevelWindow(self.frame_generate)  # create window if its None or destroyed
+        else:
+            self.toplevel_window.focus()  # if window exists focus it
+        """
     def go_to_home(self):
         self.hide_all_frames()
         self.frame_right.grid()
@@ -1012,157 +785,17 @@ class App(customtkinter.CTk):
             widget.grid_remove()
         for widget in self.pl3_solve_frame.winfo_children():
             widget.grid_remove()
+        for widget in self.pl6_solve_frame.winfo_children():
+            widget.grid_remove()
 
         self.frame_right.grid_remove()
         self.frame_PL_intro.grid_remove()
-        self.pl2_solve_frame.grid_remove()
-
         self.pl3_solve_frame.grid_remove()
         self.pl6_solve_frame.grid_remove()
-        self.pl4_solve_frame.grid_remove()
-        self.pl7_solve_frame.grid_remove()
-        self.pl9_solve_frame.grid_remove()
+
     def on_closing(self, event=0):
         self.destroy()
 
-################# ###########
-
-    def create_entries(self,nbr_months_entry):
-
-        self.my_framePL4 = MyFramePL4(self.frame_generate, nbr_months_entry)
-        self.my_framePL4.grid(row= 1 , column = 1, padx=10, pady =10)
-
-        self.opt_button = customtkinter.CTkButton(master=self.frame_generate, text="optimize", command=lambda: self.button_event(self.my_framePL4), width=65,fg_color="#FFCB42")
-        self.opt_button.grid(row= 2 , column = 1, padx=10, pady =10)
-
-        self.result_labelPL4 = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-        self.result_label1PL4 = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-        self.result_label2PL4 = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-        self.result_labelPL4.grid(row= 3 , column = 1, padx=10, pady =10)
-        self.result_label1PL4.grid(row= 4 , column = 1, padx=10, pady =10)
-        self.result_label2PL4.grid(row= 5 , column = 1, padx=10, pady =10)
-
-    def create_entriesPL2(self,n):
-        self.my_frame = MyFramePL2(self.frame_generate, n)
-        self.my_frame.grid(row= 1 , column = 1, padx=10, pady =10)
-        self.result_label = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-        self.result_label1 = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-
-        self.opt_button = customtkinter.CTkButton(master=self.frame_generate, text="mix", command=lambda: self.button_eventPL2(self.my_frame,n), width=65,fg_color="#FFCB42")
-        self.opt_button.grid(row= 2 , column = 1, padx=10, pady =10)
-        
-        self.result_label.grid(row= 3 , column = 1, padx=10, pady =10)
-        self.result_label1.grid(row= 4 , column = 1, padx=10, pady =10)
-        
-
-    def create_entriesPL7(self,num_companies,num_projects):
-
-        self.my_framePL7 = MyFramePL7(self.frame_generate, num_companies, num_projects)
-        self.my_framePL7.grid(row= 1 , column = 1, padx=10, pady =10)
-
-        self.opt_button = customtkinter.CTkButton(master=self.frame_generate, text="optimize", command=lambda: self.button_eventPL7(self.my_framePL7), width=65)
-        self.opt_button.grid(row= 2 , column = 1, padx=10, pady =10)
-        self.result_label2PL7 = customtkinter.CTkLabel(master=self.frame_generate, text="", font=('Arial', 16), justify="left")
-        self.result_label2PL7.grid(row=3 , column = 1, padx=10, pady =10)
-
-
-
-
-    def button_event(self, my_frame):
-        input_array = my_frame.get_input_array()
-        result = chaussetous_solver(input_array)
-        self.result_labelPL4.configure(text=f"Optimal production plan: {result[0]}")
-        self.result_label1PL4.configure(text=f"Optimal worker management: {result[1]}")
-        self.result_label2PL4.configure(text=f"Total cost: {result[2]}")
-
-
-    def button_eventPL7(self, my_frame):
-        costs = my_frame.get_costs_array()
-        assignment, obj_val = optimize_assignment(costs)
-        result_text = ""
-
-        if assignment:
-            result_text += "Optimal solution found:\n"
-            for i, j in assignment:
-                result_text += f"Assign project {j} to company {i}\n"
-            result_text += f"Objective value: {obj_val}"
-        else:
-            result_text = "No optimal solution found."
-
-        self.result_label2PL7.configure(text=result_text)
-
-    def button_eventPL2(self, my_frame,n):
-        input_array=my_frame.get_inputs() 
-        input_array2 = tuple(input_array)+(n,)
-
-        result = pertrolium_solver(input_array2)
-        if result == 0:
-            self.result_label.configure(text="No solution available")
-        else:
-            self.result_label.configure(text="your optimal solution:")
-            self.result_label1.configure(text=result)
-      
-
-    def button_eventPL9(self, my_frame):
-        offers = []
-        production_transport_costs = []
-        transport_client_costs = []
-        quantity_required = []
-        fixed_costs = []
-
-        # Get offers
-        for entry in my_frame.entries[0]:
-            offers.append(int(entry.get()))
-
-        # Get production_transport_costs
-        for row_entries in my_frame.entries[1:1 + int(self.num_factories.get())]:
-            row_costs = []
-            for entry in row_entries:
-                row_costs.append(int(entry.get()))
-            production_transport_costs.append(row_costs)
-        production_transport_costs=production_transport_costs[0:int(self.num_factories.get())]
-
-        # Get transport_client_costs
-        for row_entries in my_frame.entries[1 + int(self.num_factories.get()):1 + int(self.num_factories.get()) + int(self.num_depots.get())]:
-            row_costs = []
-            for entry in row_entries:
-                row_costs.append(int(entry.get()))
-            transport_client_costs.append(row_costs)
-        transport_client_costs=transport_client_costs[0:int(self.num_depots.get())]
-
-        # Get quantity_required
-        for entry in my_frame.entries[-2]:
-            quantity_required.append(int(entry.get()))
-
-        # Get fixed_costs
-        for entry in my_frame.entries[-1]:
-            fixed_costs.append(int(entry.get()))
-        result=optimize_transportation(offers, production_transport_costs, transport_client_costs, quantity_required, fixed_costs)
-        
-
-        
-        self.scrollable_frame2 = customtkinter.CTkScrollableFrame(self.frame_generate, width=655, height=10)
-        self.scrollable_frame2.grid(row= 5 , column = 2, padx=10, pady =10)
-
-        self.result_labelPL9 = customtkinter.CTkLabel(master=self.scrollable_frame2, text=result, font=('Arial', 16), justify="left",wraplength=650)
-        self.result_labelPL9.pack(padx=10, pady=10)
-
-
-
-    def create_entriesPL9(self,num_factories,num_depots,num_clients):
-
-
-        self.scrollable_frame = customtkinter.CTkScrollableFrame(self.frame_generate, width=655, height=150)
-        self.scrollable_frame.grid(row= 3 , column = 2, padx=10, pady =10)
-
-        self.my_framePL9 = MyFramePL9(self.scrollable_frame, num_factories, num_depots, num_clients)
-        self.my_framePL9.pack()
-
-        self.scrollable_frame.update_idletasks()
-        my_frame_y = self.scrollable_frame.winfo_y()
-
-        self.opt_button = customtkinter.CTkButton(self.frame_generate, text="optimize", command=lambda: self.button_eventPL9(self.my_framePL9), width=65,fg_color="#FFCB42")
-        self.opt_button.grid(row= 4 , column = 2, padx=10, pady =10)
 
 if __name__ == "__main__":
     app = App()
